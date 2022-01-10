@@ -8,22 +8,29 @@ namespace Terrain_1;
 
 public class MyGame : StartUp0
 {
-        
+    private RenderTarget2D _target;
+
     private Matrix _view;
     private Matrix _projection;
     private Matrix _world;
 
     private Vector3 _cameraPosition;
-    private Vector3 _cameraRotation;
-    private float _fieldOfView;
-
+    
     private VertexBuffer _vertexBuffer;
     private IndexBuffer _indexBuffer;
+    private float[] _heightMap;
+
+    private const int Width = 100;
+    private const float Smoothness = 10f;
+    private const float MinHeight = 1.1f;
+    private const float MaxHeight = 1.5f;
 
     private Effect _shader;
     private SpriteFont _font;
+    private Texture2D _pixel;
 
     private static readonly Random Random = new Random();
+
 
     public MyGame()
     {
@@ -53,168 +60,110 @@ public class MyGame : StartUp0
     {
         base.LoadContent();
 
+        _target = new RenderTarget2D(
+            GraphicsDevice,
+            GraphicsDeviceManager.PreferredBackBufferWidth / 10,
+            GraphicsDeviceManager.PreferredBackBufferHeight / 10,
+            false,
+            GraphicsDevice.PresentationParameters.BackBufferFormat,
+            DepthFormat.Depth24
+        );
+
         _world = Matrix.Identity;
 
-        _cameraRotation = Vector3.Zero;
-        _cameraPosition = Vector3.Zero;
-        _fieldOfView = 45f;
+        _cameraPosition = new Vector3(0, 0, 10f);
 
         _shader = Content.Load<Effect>("shader");
         _font = Content.Load<SpriteFont>("font");
-            
+        _pixel = Content.Load<Texture2D>("p_w");
+
         _shader.Parameters["Texture"]?.SetValue(Content.Load<Texture>("texture"));
 
-        var x = 0f;
-        var y = 0f;
-        var z = 0f;
+        _heightMap = new float[Width + 1];
 
-        const int width = 50;
-        const int height = 50;
+        var vertices = new VertexPositionTexture[Width * 2 + 2];
 
-        var vertices = new VertexPositionTexture[width * height];
-        var indices = new short[(width - 1) * (height) * 6];
+        var indices = new short[Width * 6];
+        var counter = 0;
 
-        for (var i = 0; i < height; i++)
+        //Fill HeightMap
+        for (var i = 0; i < Width + 1; i++)
         {
-            for (var j = 0; j < width; j++)
-            {
-                var index = j + width * i;
-                x = j;
-                z = -i;
-
-                y = Random.NextSingle() / 2f;
-
-                //var vertex0 = new VertexPositionColor(new Vector3(x + 0, y + 0, z + 0), color);
-                vertices[index].Position = new Vector3(x + 0, y + 0, z + 0);
-                vertices[index].TextureCoordinate.X = x;
-                vertices[index].TextureCoordinate.Y = -z;
-            }
+            _heightMap[i] = Random.NextSingle() * (MaxHeight - MinHeight) + MinHeight;
         }
 
-
-        int counter = 0;
-        for (int i = 0; i < height - 1; i++)
+        //Generate Vertices
+        for (var i = 0; i < Width * 2 + 2; i += 2)
         {
-            for (int j = 0; j < width - 1; j++)
-            {
-                int lowerLeft = j + i * width;
-                int lowerRight = (j + 1) + i * width;
-                int topLeft = j + (i + 1) * width;
-                int topRight = (j + 1) + (i + 1) * width;
+            var index = i / 2;
 
-                indices[counter++] = (short) topLeft;
-                indices[counter++] = (short) lowerRight;
-                indices[counter++] = (short) lowerLeft;
+            vertices[i].Position = new Vector3(index, _heightMap[index], 0);
+            vertices[i].TextureCoordinate.X = index;
+            vertices[i].TextureCoordinate.Y = _heightMap[index];
 
-                indices[counter++] = (short) topLeft;
-                indices[counter++] = (short) topRight;
-                indices[counter++] = (short) lowerRight;
-            }
+            vertices[i + 1].Position = new Vector3(index, 0, 0);
+            vertices[i + 1].TextureCoordinate.X = index;
+            vertices[i + 1].TextureCoordinate.Y = 0;
         }
 
+        //Generate Indices
+        for (var i = 0; i < Width * 2; i += 2)
+        {
+            int lowerLeft = i + 1;
+            int lowerRight = i + 3;
+            int topLeft = i;
+            int topRight = i + 2;
+
+            indices[counter++] = (short)topLeft;
+            indices[counter++] = (short)lowerRight;
+            indices[counter++] = (short)lowerLeft;
+
+            indices[counter++] = (short)topLeft;
+            indices[counter++] = (short)topRight;
+            indices[counter++] = (short)lowerRight;
+        }
+
+        //Create And Fill VertexBuffer
         _vertexBuffer = new VertexBuffer(GraphicsDevice, VertexPositionTexture.VertexDeclaration, vertices.Length,
             BufferUsage.WriteOnly);
         _vertexBuffer.SetData(vertices);
 
+        //Create And Fill IndexBuffer
         _indexBuffer = new IndexBuffer(GraphicsDevice, IndexElementSize.SixteenBits, indices.Length,
             BufferUsage.WriteOnly);
         _indexBuffer.SetData(indices);
 
+        //Set Buffers
         GraphicsDevice.SetVertexBuffer(_vertexBuffer);
         GraphicsDevice.Indices = _indexBuffer;
     }
 
     protected override void Update(GameTime gameTime)
     {
-        var deltaTime = (float) gameTime.ElapsedGameTime.TotalSeconds;
-        var totalTime = (float) gameTime.TotalGameTime.TotalSeconds;
+        var deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        var totalTime = (float)gameTime.TotalGameTime.TotalSeconds;
         var keyboardState = Keyboard.GetState();
 
         const float movementSpeed = 2f;
-        const float rotationSpeed = 2f;
 
         var velocity = Vector3.Zero;
-        var rotation = Vector3.Zero;
 
         if (keyboardState.IsKeyDown(Keys.Escape))
         {
             Exit();
         }
-            
-        if (keyboardState.IsKeyUp(Keys.LeftShift))
+
+        //Right
+        if (keyboardState.IsKeyDown(Keys.Right))
         {
-            //Forward
-            if (keyboardState.IsKeyDown(Keys.Up))
-            {
-                velocity.Z -= 1f;
-            }
-
-            //Right
-            if (keyboardState.IsKeyDown(Keys.Right))
-            {
-                velocity.X += 1f;
-            }
-
-            //Backwards
-            if (keyboardState.IsKeyDown(Keys.Down))
-            {
-                velocity.Z += 1f;
-            }
-
-            //Left
-            if (keyboardState.IsKeyDown(Keys.Left))
-            {
-                velocity.X -= 1f;
-            }
-
-            //Up
-            if (keyboardState.IsKeyDown(Keys.PageUp))
-            {
-                velocity.Y += 1f;
-            }
-
-            //Down
-            if (keyboardState.IsKeyDown(Keys.PageDown))
-            {
-                velocity.Y -= 1f;
-            }
-        }
-        else
-        {
-            //Up
-            if (keyboardState.IsKeyDown(Keys.Up))
-            {
-                rotation.X += 1f;
-            }
-
-            //Down
-            if (keyboardState.IsKeyDown(Keys.Down))
-            {
-                rotation.X -= 1f;
-            }
-
-            //Rotate Right
-            if (keyboardState.IsKeyDown(Keys.Right))
-            {
-                rotation.Y -= 1f;
-            }
-
-            //Rotate Left
-            if (keyboardState.IsKeyDown(Keys.Left))
-            {
-                rotation.Y += 1f;
-            }
+            velocity.X += 1f;
         }
 
-        if (rotation.Length() != 0)
+        //Left
+        if (keyboardState.IsKeyDown(Keys.Left))
         {
-            rotation.Normalize();
-            rotation *= rotationSpeed;
-            rotation *= deltaTime;
-
-            _cameraRotation += rotation;
+            velocity.X -= 1f;
         }
-
 
         if (velocity.Length() != 0)
         {
@@ -222,25 +171,39 @@ public class MyGame : StartUp0
             velocity *= movementSpeed;
             velocity *= deltaTime;
 
-            var rotationMatrix = Matrix.CreateRotationY(_cameraRotation.Y);
-
-            _cameraPosition += Vector3.Transform(velocity, rotationMatrix);
+            _cameraPosition += velocity;
         }
 
-        var cameraRotationMatrix = Matrix.CreateRotationX(_cameraRotation.X) *
-                                   Matrix.CreateRotationY(_cameraRotation.Y) *
-                                   Matrix.CreateRotationZ(_cameraRotation.Z);
-        var cameraDirection = Vector3.Transform(Vector3.Forward, cameraRotationMatrix);
+        var x = _cameraPosition.X;
+        var clampedX = (int)x;
+
+        if (x is >= 0 and < Width)
+        {
+            var a = _heightMap[clampedX];
+            var b = _heightMap[clampedX + 1];
+
+            var m = b - a;
+            var y = (m * (x - clampedX)) + a;
+
+            _cameraPosition.Y = y;
+        }
+        else
+        {
+            _cameraPosition.X = Math.Clamp(_cameraPosition.X, 0, Width);
+        }
+
 
         _view = Matrix.CreateLookAt(
             _cameraPosition,
-            _cameraPosition + cameraDirection,
+            _cameraPosition + Vector3.Forward,
             Vector3.Up
         );
 
-        _projection = Matrix.CreatePerspectiveFieldOfView(
-            MathHelper.ToRadians(_fieldOfView),
-            GraphicsDevice.Viewport.AspectRatio,
+        _projection = Matrix.CreateOrthographic(
+            // ReSharper disable once PossibleLossOfFraction
+            GraphicsDevice.Viewport.Width / GraphicsDevice.Viewport.Width,
+            // ReSharper disable once PossibleLossOfFraction
+            GraphicsDevice.Viewport.Width / GraphicsDevice.Viewport.Height,
             0.1f,
             100f
         );
@@ -252,6 +215,8 @@ public class MyGame : StartUp0
 
     protected override void Draw(GameTime gameTime)
     {
+        GraphicsDevice.SetRenderTarget(_target);
+        GraphicsDevice.DepthStencilState = DepthStencilState.Default;
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
         foreach (var pass in _shader.CurrentTechnique.Passes)
@@ -259,5 +224,17 @@ public class MyGame : StartUp0
             pass.Apply();
             GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _indexBuffer.IndexCount / 3);
         }
+
+        GraphicsDevice.SetRenderTarget(null);
+
+        SpriteBatch.Begin(samplerState: SamplerState.PointClamp);
+        SpriteBatch.Draw(_target, GraphicsDevice.Viewport.Bounds, Color.White);
+        SpriteBatch.End();
+
+        SpriteBatch.Begin(samplerState: SamplerState.PointClamp,
+            transformMatrix: Matrix.CreateTranslation(new Vector3(GraphicsDevice.Viewport.Bounds.Center.ToVector2(),
+                0)));
+        SpriteBatch.Draw(_pixel, new Rectangle(-1, -1, 2, 2), Color.Red);
+        SpriteBatch.End();
     }
 }
