@@ -82,8 +82,6 @@ float4 MainPS(VertexShaderOutput input) : COLOR
     effectColor *= tex2D(EffectSampler, textureUVs) * float4(0, 1, 1, 1);
     
   
-   
-    
     if (color.r == 1 && color.g == 0 && color.b == 1)
     {
         color = float4(0, 1, 1, 1) * abs(sin(Total));
