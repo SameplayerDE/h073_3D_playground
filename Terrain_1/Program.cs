@@ -1,4 +1,4 @@
-﻿namespace Terrain_0;
+﻿namespace Terrain_1;
 
 public static class Program
 {

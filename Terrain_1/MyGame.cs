@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using StartUp_0;
 
-namespace Terrain_0;
+namespace Terrain_1;
 
 public class MyGame : StartUp0
 {

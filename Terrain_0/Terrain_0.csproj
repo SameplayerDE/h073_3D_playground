@@ -15,4 +15,8 @@
       <Folder Include="Content" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\StartUp_0\StartUp_0.csproj" />
+    </ItemGroup>
+
 </Project>
