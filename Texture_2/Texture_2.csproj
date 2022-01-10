@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <TargetFramework>net6.0-windows</TargetFramework>
+        <LangVersion>10</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <MonoGameContentReference Include="Content\Content.mgcb" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.0.1641" />
+      <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.0.1641" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\StartUp_0\StartUp_0.csproj" />
+    </ItemGroup>
+
+</Project>
