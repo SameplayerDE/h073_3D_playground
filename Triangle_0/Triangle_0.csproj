@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\StartUp_0\StartUp_0.csproj" />
+      <ProjectReference Include="..\StartUp_DesktopGL\StartUp_DesktopGL.csproj" />
     </ItemGroup>
 
 </Project>

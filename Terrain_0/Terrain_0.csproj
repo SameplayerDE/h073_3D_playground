@@ -7,16 +7,16 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.0.1641" />
-      <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1641" />
+        <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.0.1641" />
+        <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1641" />
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Content" />
+        <Folder Include="Content" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\StartUp_0\StartUp_0.csproj" />
+        <ProjectReference Include="..\StartUp_DesktopGL\StartUp_DesktopGL.csproj" />
     </ItemGroup>
 
 </Project>

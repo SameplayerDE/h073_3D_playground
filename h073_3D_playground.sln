@@ -6,7 +6,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Terrain_1", "Terrain_1\Terr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Triangle_0", "Triangle_0\Triangle_0.csproj", "{973DE508-3C0D-420C-A536-1167462B816B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StartUp_0", "StartUp_0\StartUp_0.csproj", "{CD59E9D1-77B4-4451-9502-59DA50114415}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StartUp_DesktopGL", "StartUp_DesktopGL\StartUp_DesktopGL.csproj", "{CD59E9D1-77B4-4451-9502-59DA50114415}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Texture_0", "Texture_0\Texture_0.csproj", "{ADE2A4CE-252B-4574-92A2-ED73E0F6CF95}"
 EndProject

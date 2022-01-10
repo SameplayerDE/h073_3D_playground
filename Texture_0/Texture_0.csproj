@@ -3,17 +3,20 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net6.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
+        <LangVersion>10</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\StartUp_0\StartUp_0.csproj" />
+        <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.0.1641" />
+        <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1641" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.0.1641" />
-      <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1641" />
+        <Folder Include="Content" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\StartUp_DesktopGL\StartUp_DesktopGL.csproj" />
     </ItemGroup>
 
 </Project>
