@@ -1,3 +1,10 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿namespace Triangle_0;
 
-Console.WriteLine("Hello, World!");
+public static class Program
+{
+    public static void Main()
+    {
+        using var game = new MyGame();
+        game.Run();
+    }
+}
