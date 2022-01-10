@@ -2,12 +2,12 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using StartUp_0;
+using StartUp_DesktopGL;
 
 namespace Texture_2
 {
 
-    public class MyGame : StartUp0
+    public class MyGame : StartUpDesktopGL
     {
         private VertexPositionTexture[] _vertices;
         private Effect _shader;

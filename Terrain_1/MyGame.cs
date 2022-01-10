@@ -2,11 +2,11 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using StartUp_0;
+using StartUp_DesktopGL;
 
 namespace Terrain_1;
 
-public class MyGame : StartUp0
+public class MyGame : StartUpDesktopGL
 {
     private RenderTarget2D _target;
 

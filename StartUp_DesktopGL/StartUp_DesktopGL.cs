@@ -1,14 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace StartUp_0;
+namespace StartUp_DesktopGL;
 
-public abstract class StartUp0 : Game
+public abstract class StartUpDesktopGL : Game
 {
     public GraphicsDeviceManager GraphicsDeviceManager;
     public SpriteBatch SpriteBatch;
 
-    protected StartUp0()
+    protected StartUpDesktopGL()
     {
         GraphicsDeviceManager = new GraphicsDeviceManager(this);
     }

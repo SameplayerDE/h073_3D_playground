@@ -44,13 +44,6 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 	float2 textureUVs = input.TextureUVs;
 	float4 color = float4(1, 1, 1, 1);
 
-    textureUVs.x += sin(Total) * 10 * Delta;
-    textureUVs.y += cos(Total) * 10 * Delta;
-
-    color.r += sin(Total) * 10 * Delta;
-    color.g += cos(Total) * 10 * Delta;
-    color.b += cos(Total) * 10 * Delta;
-
 	output.Position = mul(position, WorldViewProjection);
 	output.TextureUVs = textureUVs;
 	output.Color = color;
@@ -72,6 +65,5 @@ technique BasicColorDrawing
 	{
 		VertexShader = compile VS_SHADERMODEL MainVS();
 		PixelShader = compile PS_SHADERMODEL MainPS();
-		CullMode = NONE;
 	}
 };

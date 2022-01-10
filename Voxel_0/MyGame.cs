@@ -2,14 +2,23 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using StartUp_0;
+using StartUp_DesktopGL;
 
 namespace Voxel_0;
 
-public class MyGame : StartUp0
+public class MyGame : StartUpDesktopGL
 {
-    private VertexPositionTexture[] _vertices;
+    private Voxel _voxel;
     private Effect _shader;
+    
+    private Matrix _view;
+    private Matrix _projection;
+    private Matrix _world;
+
+    private Vector3 _cameraPosition;
+    private Vector3 _cameraRotation;
+    private float _fieldOfView;
+    
 
     public MyGame()
     {
@@ -23,47 +32,136 @@ public class MyGame : StartUp0
     {
         _shader = Content.Load<Effect>("shader");
 
-
+        _fieldOfView = 48f;
+        _world = Matrix.Identity;
+        
         _shader.Parameters["Texture"]?.SetValue(Content.Load<Texture2D>("texture"));
 
-        GenerateVertices();
-    }
-
-    private void GenerateVertices()
-    {
-        _vertices = new VertexPositionTexture[6];
-
-        _vertices[0] = new VertexPositionTexture(new Vector3(-.5f, +.5f, 0), new Vector2(0, 0));
-        _vertices[1] = new VertexPositionTexture(new Vector3(+.5f, +.5f, 0), new Vector2(1, 0));
-        _vertices[2] = new VertexPositionTexture(new Vector3(-.5f, -.5f, 0), new Vector2(0, 1));
-
-        _vertices[3] = new VertexPositionTexture(new Vector3(-.5f, -.5f, 0), new Vector2(0, 1));
-        _vertices[4] = new VertexPositionTexture(new Vector3(+.5f, +.5f, 0), new Vector2(1, 0));
-        _vertices[5] = new VertexPositionTexture(new Vector3(+.5f, -.5f, 0), new Vector2(1, 1));
+        _voxel = new Voxel(_shader);
     }
 
     protected override void Update(GameTime gameTime)
     {
-        var deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-        var totalTime = (float)gameTime.TotalGameTime.TotalSeconds;
-
+        var deltaTime = (float) gameTime.ElapsedGameTime.TotalSeconds;
+        var totalTime = (float) gameTime.TotalGameTime.TotalSeconds;
         var keyboardState = Keyboard.GetState();
+
+        const float movementSpeed = 2f;
+        const float rotationSpeed = 2f;
+
+        var velocity = Vector3.Zero;
+        var rotation = Vector3.Zero;
 
         if (keyboardState.IsKeyDown(Keys.Escape))
         {
             Exit();
         }
+            
+        if (keyboardState.IsKeyUp(Keys.LeftShift))
+        {
+            //Forward
+            if (keyboardState.IsKeyDown(Keys.Up))
+            {
+                velocity.Z -= 1f;
+            }
 
-        var (x, y) = GraphicsDevice.Viewport.Bounds.Size.ToVector2() / 2;
+            //Right
+            if (keyboardState.IsKeyDown(Keys.Right))
+            {
+                velocity.X += 1f;
+            }
 
-        const float value = 128f; //PixelsPerUnit
+            //Backwards
+            if (keyboardState.IsKeyDown(Keys.Down))
+            {
+                velocity.Z += 1f;
+            }
 
-        var world = Matrix.Identity;
-        var view = Matrix.CreateLookAt(Vector3.Backward, Vector3.Zero, Vector3.Up);
-        var projection = Matrix.CreateOrthographicOffCenter(-x / value, x / value, -y / value, y / value, 0.1f, 100f);
+            //Left
+            if (keyboardState.IsKeyDown(Keys.Left))
+            {
+                velocity.X -= 1f;
+            }
 
-        _shader.Parameters["WorldViewProjection"]?.SetValue(world * view * projection);
+            //Up
+            if (keyboardState.IsKeyDown(Keys.PageUp))
+            {
+                velocity.Y += 1f;
+            }
 
+            //Down
+            if (keyboardState.IsKeyDown(Keys.PageDown))
+            {
+                velocity.Y -= 1f;
+            }
+        }
+        else
+        {
+            //Up
+            if (keyboardState.IsKeyDown(Keys.Up))
+            {
+                rotation.X += 1f;
+            }
+
+            //Down
+            if (keyboardState.IsKeyDown(Keys.Down))
+            {
+                rotation.X -= 1f;
+            }
+
+            //Rotate Right
+            if (keyboardState.IsKeyDown(Keys.Right))
+            {
+                rotation.Y -= 1f;
+            }
+
+            //Rotate Left
+            if (keyboardState.IsKeyDown(Keys.Left))
+            {
+                rotation.Y += 1f;
+            }
+        }
+
+        if (rotation.Length() != 0)
+        {
+            rotation.Normalize();
+            rotation *= rotationSpeed;
+            rotation *= deltaTime;
+
+            _cameraRotation += rotation;
+        }
+
+
+        if (velocity.Length() != 0)
+        {
+            velocity.Normalize();
+            velocity *= movementSpeed;
+            velocity *= deltaTime;
+
+            var rotationMatrix = Matrix.CreateRotationY(_cameraRotation.Y);
+
+            _cameraPosition += Vector3.Transform(velocity, rotationMatrix);
+        }
+
+        var cameraRotationMatrix = Matrix.CreateRotationX(_cameraRotation.X) *
+                                   Matrix.CreateRotationY(_cameraRotation.Y) *
+                                   Matrix.CreateRotationZ(_cameraRotation.Z);
+        var cameraDirection = Vector3.Transform(Vector3.Forward, cameraRotationMatrix);
+
+        _view = Matrix.CreateLookAt(
+            _cameraPosition,
+            _cameraPosition + cameraDirection,
+            Vector3.Up
+        );
+
+        _projection = Matrix.CreatePerspectiveFieldOfView(
+            MathHelper.ToRadians(_fieldOfView),
+            GraphicsDevice.Viewport.AspectRatio,
+            0.1f,
+            100f
+        );
+
+        _shader.Parameters["WorldViewProjection"]?.SetValue(_world * _view * _projection);
         _shader.Parameters["Delta"]?.SetValue(deltaTime);
         _shader.Parameters["Total"]?.SetValue(totalTime);
     }
@@ -72,10 +170,6 @@ public class MyGame : StartUp0
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        foreach (var pass in _shader.CurrentTechnique.Passes)
-        {
-            pass.Apply();
-            GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _vertices, 0, 2);
-        }
+        _voxel.Draw(GraphicsDevice);
     }
 }
