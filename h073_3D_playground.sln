@@ -16,7 +16,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Texture_2", "Texture_2\Text
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Voxel_0", "Voxel_0\Voxel_0.csproj", "{3CC06F13-1B95-4F53-9249-7A64F68BCF3F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StartUp_Dx", "StartUp_Dx\StartUp_Dx.csproj", "{E39F5FC8-E673-4E87-B5F7-92D9BD18BFB7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StartUp_WindowsDx", "StartUp_WindowsDx\StartUp_WindowsDx.csproj", "{E39F5FC8-E673-4E87-B5F7-92D9BD18BFB7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
