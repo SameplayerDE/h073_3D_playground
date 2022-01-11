@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using StartUp_DesktopGL;
@@ -7,8 +9,17 @@ namespace Game_0
 {
     public class MyGame : StartUpDesktopGL
     {
-        private VertexPositionTexture[] _vertices;
         private Effect _shader;
+        public static Dictionary<string, Texture2D> Textures;
+
+        private Matrix _world;
+        private Matrix _view;
+        private Matrix _projection;
+        
+        private World _gameWorld;
+
+        public static Random Random = new Random();
+        
 
         public MyGame()
         {
@@ -18,34 +29,10 @@ namespace Game_0
             Window.AllowUserResizing = true;
         }
 
-        protected override void LoadContent()
-        {
-            _shader = Content.Load<Effect>("shader");
-
-
-            _shader.Parameters["Texture"]?.SetValue(Content.Load<Texture2D>("texture"));
-            _shader.Parameters["Effect"]?.SetValue(Content.Load<Texture2D>("flash"));
-
-            GenerateVertices();
-        }
-
-        private void GenerateVertices()
-        {
-            _vertices = new VertexPositionTexture[6];
-
-            _vertices[0] = new VertexPositionTexture(new Vector3(-.5f, +.5f, 0), new Vector2(0, 0));
-            _vertices[1] = new VertexPositionTexture(new Vector3(+.5f, +.5f, 0), new Vector2(1, 0));
-            _vertices[2] = new VertexPositionTexture(new Vector3(-.5f, -.5f, 0), new Vector2(0, 1));
-
-            _vertices[3] = new VertexPositionTexture(new Vector3(-.5f, -.5f, 0), new Vector2(0, 1));
-            _vertices[4] = new VertexPositionTexture(new Vector3(+.5f, +.5f, 0), new Vector2(1, 0));
-            _vertices[5] = new VertexPositionTexture(new Vector3(+.5f, -.5f, 0), new Vector2(1, 1));
-        }
-
         protected override void Update(GameTime gameTime)
         {
-            var deltaTime = (float) gameTime.ElapsedGameTime.TotalSeconds;
-            var totalTime = (float) gameTime.TotalGameTime.TotalSeconds;
+            var deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            var totalTime = (float)gameTime.TotalGameTime.TotalSeconds;
 
             var keyboardState = Keyboard.GetState();
 
@@ -56,28 +43,67 @@ namespace Game_0
 
             var (x, y) = GraphicsDevice.Viewport.Bounds.Size.ToVector2() / 2;
 
-            const float value = 512f; //PixelsPerUnit
+            var value = 42f * GraphicsDevice.Viewport.AspectRatio; //PixelsPerUnit
 
-            var world = Matrix.Identity;
-            var view = Matrix.CreateLookAt(Vector3.Backward, Vector3.Zero, Vector3.Up);
-            var projection =
+            _world = Matrix.Identity;
+            _view = Matrix.CreateLookAt(Vector3.Backward, Vector3.Zero, Vector3.Up);
+            _projection =
                 Matrix.CreateOrthographicOffCenter(-x / value, x / value, -y / value, y / value, 0.1f, 100f);
 
-            _shader.Parameters["WorldViewProjection"]?.SetValue(world * view * projection);
+            _shader.Parameters["WorldViewProjection"]?.SetValue(_world * _view * _projection);
 
             _shader.Parameters["Delta"]?.SetValue(deltaTime);
             _shader.Parameters["Total"]?.SetValue(totalTime);
+            
+            _gameWorld.Update(gameTime);
+            
+        }
+
+        protected override void LoadContent()
+        {
+
+            Textures = new Dictionary<string, Texture2D>();
+            
+            _shader = Content.Load<Effect>("shader");
+
+            Textures.Add("texture", Content.Load<Texture2D>("texture"));
+            Textures.Add("test", Content.Load<Texture2D>("test"));
+
+            _gameWorld = new World();
+
+
+            
+            for (var i = 0; i < 5; i++)
+            {
+                _gameWorld.Add(
+                    new Sprite()
+                    {
+                        Position = new Vector3(i, 0, 0),
+                        TextureName = "test"
+                    }
+                );
+            }
+            
+            for (var i = -5; i <= 5; i++)
+            {
+                for (var j = -5; j <= 5; j++)
+                {
+                    _gameWorld.Add(
+                        new Sprite()
+                        {
+                            Position = new Vector3(i, j, 0),
+                            Dynamic = false
+                        }
+                    );
+                }
+            }
         }
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.Black);
 
-            foreach (var pass in _shader.CurrentTechnique.Passes)
-            {
-                pass.Apply();
-                GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _vertices, 0, 2);
-            }
+            _gameWorld.Draw(GraphicsDevice, _shader, _world, _view, _projection);
         }
     }
 }
